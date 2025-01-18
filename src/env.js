@@ -11,9 +11,10 @@ export const env = createEnv({
       process.env.NODE_ENV === "production"
         ? z.string()
         : z.string().optional(),
-    GOOGLE_CLIENT_ID: z.string().optional(),
-    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
     DATABASE_URL: z.string().url(),
+    AUTH_RESEND_KEY: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -33,6 +34,7 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    AUTH_RESEND_KEY: process.env.AUTH_RESEND_KEY,
     AUTH_SECRET: process.env.AUTH_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
