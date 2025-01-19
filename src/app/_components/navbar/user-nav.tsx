@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, Database, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,6 +19,7 @@ import {
 import { type User } from "next-auth";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { seedDB } from "@/scripts/seed";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
@@ -65,6 +66,14 @@ export function NavUser({ user }: { user: User }) {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => seedDB()}
+              disabled
+            >
+              <Database />
+              Seed DB
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => signOut({ redirectTo: "/login" })}
