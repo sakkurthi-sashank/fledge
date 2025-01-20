@@ -10,4 +10,15 @@ export const categoriesRouter = createTRPCRouter({
     });
     return categoriesData;
   }),
+  getCategoriesWithSubCategory: protectedProcedure.query(async () => {
+    const categoriesData = await db.query.category.findMany({
+      orderBy(fields, operators) {
+        return operators.asc(fields.name);
+      },
+      with: {
+        subCategories: true,
+      },
+    });
+    return categoriesData;
+  }),
 });

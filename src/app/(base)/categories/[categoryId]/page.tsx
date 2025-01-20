@@ -1,19 +1,21 @@
 "use client";
 
+import { Categories } from "@/app/_components/categories";
+import CourseCard from "@/app/_components/course/course-card";
 import { api } from "@/trpc/react";
-import React from "react";
-import { Categories } from "../_components/categories";
-import CourseCard from "../_components/course/course-card";
+import { useParams } from "next/navigation";
 
-export default function HomePage() {
+const CoursesByCategory = () => {
+  const { categoryId } = useParams<{ categoryId: string }>();
+
   const { data: categoryData } = api.categories.getCategories.useQuery();
   const { data: coursesData } = api.courses.getCoursesByCategory.useQuery({
-    id: undefined,
+    id: categoryId,
   });
 
   return (
     <div className="pb-16 md:mt-5 md:px-10 xl:px-16">
-      <Categories categories={categoryData} selectedCategory={null} />
+      <Categories categories={categoryData} selectedCategory={categoryId} />
       <div className="flex flex-wrap justify-center gap-7">
         {coursesData?.map((course) => (
           <CourseCard key={course.id} course={course} />
@@ -21,4 +23,6 @@ export default function HomePage() {
       </div>
     </div>
   );
-}
+};
+
+export default CoursesByCategory;

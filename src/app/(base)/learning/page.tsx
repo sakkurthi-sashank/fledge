@@ -1,6 +1,6 @@
 "use client";
 
-import CourseCard from "@/app/_components/course-card";
+import CourseCard from "@/app/_components/course/course-card";
 import { api } from "@/trpc/react";
 
 const LearningPage = () => {

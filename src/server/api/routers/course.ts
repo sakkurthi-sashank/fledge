@@ -1,8 +1,31 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { db } from "@/server/db";
+import { courses } from "@/server/db/schema";
 import { z } from "zod";
 
 export const courseRouter = createTRPCRouter({
+  createCourse: protectedProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        categoryId: z.string(),
+        subCategoryId: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const newCourse = await db
+        .insert(courses)
+        .values({
+          title: input.title,
+          categoryId: input.categoryId,
+          subCategoryId: input.subCategoryId,
+        })
+        .returning()
+        .execute();
+
+      return newCourse[0];
+    }),
+
   getCoursesByCategory: protectedProcedure
     .input(
       z.object({
