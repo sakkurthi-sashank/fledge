@@ -49,7 +49,7 @@ export function Combobox({ options, value, onChange }: ComboBoxProps) {
           <CommandList>
             <CommandEmpty>No option found.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options?.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}

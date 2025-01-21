@@ -19,6 +19,7 @@ export const courseRouter = createTRPCRouter({
           title: input.title,
           categoryId: input.categoryId,
           subCategoryId: input.subCategoryId,
+          instructorId: ctx.session.user.id,
         })
         .returning()
         .execute();
@@ -59,6 +60,44 @@ export const courseRouter = createTRPCRouter({
 
       return courseData;
     }),
+
+  getCoursesByInstructorIdAndCourseId: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const courseData = await db.query.courses.findMany({
+        orderBy(fields, operators) {
+          return operators.desc(fields.createdAt);
+        },
+        where(fields, operators) {
+          return operators.and(
+            operators.eq(fields.instructorId, ctx.session.user.id),
+            operators.eq(fields.id, input.courseId),
+          );
+        },
+        with: {
+          sections: true,
+        },
+      });
+
+      return courseData[0];
+    }),
+
+  getCoursesByInstructorId: protectedProcedure.query(async ({ ctx }) => {
+    const courseData = await db.query.courses.findMany({
+      orderBy(fields, operators) {
+        return operators.desc(fields.createdAt);
+      },
+      where(fields, operators) {
+        return operators.eq(fields.instructorId, ctx.session.user.id);
+      },
+    });
+
+    return courseData;
+  }),
 
   purchasedCourses: protectedProcedure.query(async ({ ctx }) => {
     const purchasedCoursesData = await db.query.purchases.findMany({
