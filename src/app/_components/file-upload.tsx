@@ -1,3 +1,5 @@
+"use client";
+
 import { useDropzone } from "react-dropzone";
 import React, { ChangeEventHandler, FC, useCallback, useState } from "react";
 import { UploadIcon, XIcon } from "lucide-react";
@@ -42,7 +44,14 @@ export const DropzoneField: FC<DropzoneFieldProps> = ({
 
   const onDrop = useCallback(
     async (droppedFiles: File[]) => {
-      setValue(name, droppedFiles[0], { shouldValidate: true });
+      if (multiple) {
+        const newFiles =
+          (!!files?.length && [...files].concat(droppedFiles)) || droppedFiles;
+        setValue(name, newFiles, { shouldValidate: true });
+      } else {
+        setValue(name, droppedFiles[0], { shouldValidate: true });
+      }
+
       for (const file of droppedFiles) {
         const controller = new AbortController();
         setAbortControllers((prev) => ({ ...prev, [file.name]: controller }));
@@ -51,26 +60,46 @@ export const DropzoneField: FC<DropzoneFieldProps> = ({
           file,
           destinationPath,
           signal: controller.signal,
-          onProgress: (progress: number) => {
+          onProgress: (progress) => {
             setUploadProgress((prev) => ({ ...prev, [file.name]: progress }));
             if (progress === 100) {
-              setValue(filePathName, {
-                ...filePaths,
-                [file.name]: destinationPath,
-              });
+              if (multiple) {
+                setValue(filePathName, {
+                  ...filePaths,
+                  [file.name]: destinationPath,
+                });
+              } else {
+                setValue(filePathName, destinationPath);
+              }
             }
           },
         });
       }
     },
-    [setValue, name, destinationPathPrefix, filePathName, filePaths],
+    [
+      multiple,
+      files,
+      setValue,
+      name,
+      destinationPathPrefix,
+      filePathName,
+      filePaths,
+    ],
   );
   const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file_array = Array.from(e.target.files || []);
     await onDrop(file_array);
   };
   const handleCancelUpload = (fileName: string) => {
-    setValue(name, undefined, { shouldValidate: true });
+    if (multiple) {
+      setValue(
+        name,
+        files.filter((f: File) => f.name !== fileName),
+        { shouldValidate: true },
+      );
+    } else {
+      setValue(name, undefined, { shouldValidate: true });
+    }
     if (abortControllers[fileName]) {
       abortControllers[fileName].abort();
       setAbortControllers((prev) => {
@@ -83,7 +112,7 @@ export const DropzoneField: FC<DropzoneFieldProps> = ({
 
   return (
     <>
-      {!files && (
+      {multiple ? (
         <Dropzone
           multiple={multiple}
           onDrop={onDrop}
@@ -91,27 +120,60 @@ export const DropzoneField: FC<DropzoneFieldProps> = ({
           description={description}
           onChange={onChange}
         />
+      ) : (
+        !files && (
+          <Dropzone
+            multiple={multiple}
+            onDrop={onDrop}
+            {...rest}
+            description={description}
+            onChange={onChange}
+          />
+        )
       )}
       {files && (
         <div className="mt-4 space-y-2">
-          <Card className="relative">
-            <Button
-              variant="ghost"
-              className="absolute right-2 top-2"
-              onClick={() => handleCancelUpload(files.name)}
-            >
-              <XIcon className="h-5 w-5" />
-            </Button>
-            <CardHeader>
-              <CardTitle>{files.name}</CardTitle>
-              <CardDescription>
-                {(files.size / 1024).toFixed(2)} KB
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Progress value={uploadProgress[files.name] || 0} />
-            </CardContent>
-          </Card>
+          {multiple ? (
+            files.map((file: File, index: number) => (
+              <Card key={index} className="relative">
+                <Button
+                  variant="ghost"
+                  className="absolute right-2 top-2"
+                  onClick={() => handleCancelUpload(file.name)}
+                >
+                  <XIcon className="h-5 w-5" />
+                </Button>
+                <CardHeader>
+                  <CardTitle>{file.name}</CardTitle>
+                  <CardDescription>
+                    {(file.size / 1024).toFixed(2)} KB
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Progress value={uploadProgress[file.name] || 0} />
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card className="relative">
+              <Button
+                variant="ghost"
+                className="absolute right-2 top-2"
+                onClick={() => handleCancelUpload(files.name)}
+              >
+                <XIcon className="h-5 w-5" />
+              </Button>
+              <CardHeader>
+                <CardTitle>{files.name}</CardTitle>
+                <CardDescription>
+                  {(files.size / 1024).toFixed(2)} KB
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Progress value={uploadProgress[files.name] || 0} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </>
@@ -136,7 +198,8 @@ const Dropzone: FC<{
         <div className="flex flex-col items-center justify-center space-y-4 rounded-md border-2 border-dashed border-gray-300 bg-gray-400 px-6 py-12 transition-colors focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary hover:border-gray-400">
           <UploadIcon className="h-12 w-12 text-gray-600" />
           <div className="font-medium text-gray-900 dark:text-gray-50">
-            Please Drop the file within the highlighted area.
+            Please Drop the {multiple ? "files" : "file"} within the highlighted
+            area.
           </div>
           {description && (
             <div className="text-sm text-gray-500">{description}</div>
@@ -146,7 +209,7 @@ const Dropzone: FC<{
         <div className="flex flex-col items-center justify-center space-y-4 rounded-md border-2 border-dashed border-gray-300 px-6 py-12 transition-colors focus-within:border-transparent focus-within:ring-2 focus-within:ring-primary hover:border-gray-400">
           <UploadIcon className="h-12 w-12 text-gray-600" />
           <div className="font-medium text-gray-900 dark:text-gray-50">
-            Drop multiple file here or click to upload
+            Drop {multiple ? "files" : "file"} here or click to upload
           </div>
           {description && (
             <div className="text-sm text-gray-500">{description}</div>

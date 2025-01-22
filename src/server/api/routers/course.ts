@@ -1,6 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { courses } from "@/server/db/schema";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const courseRouter = createTRPCRouter({
@@ -121,4 +122,41 @@ export const courseRouter = createTRPCRouter({
 
     return purchasedCoursesData;
   }),
+
+  updateCourse: protectedProcedure
+    .input(
+      z.object({
+        coursesId: z.string(),
+        title: z.string(),
+        subtitle: z.string().optional(),
+        description: z.string().optional(),
+        categoryId: z.string(),
+        subCategoryId: z.string(),
+        levelId: z.string().optional(),
+        imageUrl: z.string().optional(),
+        price: z.string().optional(),
+      }),
+    )
+    .mutation(({ input, ctx }) => {
+      const courseData = db
+        .update(courses)
+        .set({
+          title: input.title,
+          subtitle: input.subtitle,
+          description: input.description,
+          levelId: input.levelId,
+          categoryId: input.categoryId,
+          subCategoryId: input.subCategoryId,
+          price: input.price,
+          imageUrl: input.imageUrl,
+        })
+        .where(
+          and(
+            eq(courses.id, input.coursesId),
+            eq(courses.instructorId, ctx.session.user.id),
+          ),
+        );
+
+      return courseData;
+    }),
 });

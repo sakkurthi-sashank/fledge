@@ -1,7 +1,7 @@
 "use client";
 
 import AlertBanner from "@/app/_components/alert-banner";
-import EditCourseForm from "@/app/_components/course/edit-course-form";
+import { EditCourseForm } from "@/app/_components/course/edit-course-form";
 import { LoadingSpinner } from "@/app/_components/loading-spinner";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
